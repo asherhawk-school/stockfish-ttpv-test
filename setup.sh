@@ -42,10 +42,10 @@ if command -v cutechess-cli >/dev/null || [ -x "$WORK/cutechess/build/cutechess-
 else
     # cutechess needs Qt and CMake; install them if we have root, then build.
     if ! command -v cmake >/dev/null || ! { command -v qmake6 >/dev/null || [ -d /usr/lib/x86_64-linux-gnu/cmake/Qt6 ] || [ -d /usr/lib/aarch64-linux-gnu/cmake/Qt6 ]; }; then
-        as_root apt-get update -qq >/dev/null 2>&1 && as_root apt-get install -y -qq cmake qt6-base-dev >/dev/null 2>&1 || true
+        as_root apt-get update -qq >/dev/null 2>&1 && as_root apt-get install -y -qq cmake qt6-base-dev qt6-svg-dev >/dev/null 2>&1 || true
     fi
     if git clone -q --depth 1 https://github.com/cutechess/cutechess.git "$WORK/cutechess" 2>/dev/null \
-        && cmake -S "$WORK/cutechess" -B "$WORK/cutechess/build" -DCMAKE_BUILD_TYPE=Release >"$WORK/build-cutechess.log" 2>&1 \
+        && cmake -S "$WORK/cutechess" -B "$WORK/cutechess/build" -DCMAKE_BUILD_TYPE=Release -DWITH_TESTS=OFF >"$WORK/build-cutechess.log" 2>&1 \
         && cmake --build "$WORK/cutechess/build" --target cli -j"$JOBS" >>"$WORK/build-cutechess.log" 2>&1; then
         echo "built cutechess-cli"
     else

@@ -1,0 +1,55 @@
+name: Tournament
+
+# Plays edited vs stock Stockfish at 15+0, split across 8 GitHub runners that
+# play in parallel, then combines the games into one result on the run's page.
+on:
+  workflow_dispatch:
+    inputs:
+      games:
+        description: "Total games (split evenly across 8 runners)"
+        default: "1000"
+
+jobs:
+  play:
+    name: Games (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt and CMake for cutechess
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq cmake qt6-base-dev qt6-svg-dev
+
+      - name: Build engines, download book, build cutechess
+        run: ./setup.sh
+
+      - name: Play games
+        # Each shard plays an even number of games (openings come in color-swapped pairs).
+        run: ./run_tournament.sh $(( (${{ inputs.games }} + 15) / 16 * 2 )) $(( 1000 + ${{ matrix.shard }} ))
+
+      - name: Save results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: results/
+
+  combine:
+    name: Combined result
+    needs: play
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-*
+          path: shards
+
+      - name: Combine shards
+        run: python3 combine.py shards | tee -a "$GITHUB_STEP_SUMMARY"

@@ -13,6 +13,11 @@ unchanged and the only behavior change is less shallow pruning at ttPv nodes.
 
 ## Running it
 
+On GitHub: Actions → Tournament → Run workflow. It splits the games across 8 runners and
+shows the combined score on the run's summary page.
+
+Locally:
+
 ```bash
 ./setup.sh            # builds both engines, downloads the opening book, installs a match runner
 ./run_tournament.sh   # plays 1000 games; progress in results/tournament.log
