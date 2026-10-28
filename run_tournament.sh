@@ -8,7 +8,8 @@ WORK="$PWD/work"
 GAMES=${1:-1000}
 SEED=${2:-$RANDOM}
 CORES=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
-CONC=$(( CORES > 1 ? CORES - 1 : 1 ))   # leave one core free to avoid time losses
+CONC=${CONC:-$(( CORES > 1 ? CORES - 1 : 1 ))}   # default leaves one core free to avoid time losses
+[ "$CONC" -ge "$CORES" ] && [ "$CORES" -gt 1 ] && CONC=$(( CORES - 1 ))
 mkdir -p results
 
 if command -v cutechess-cli >/dev/null; then CC=cutechess-cli; else CC="$WORK/cutechess/build/cutechess-cli"; fi

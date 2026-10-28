@@ -1,13 +1,13 @@
 name: Tournament
 
-# Plays edited vs stock Stockfish at 15+0, split across 8 GitHub runners that
+# Plays edited vs stock Stockfish at 15+0, split across 20 GitHub runners that
 # play in parallel, then combines the games into one result on the run's page.
 on:
   workflow_dispatch:
     inputs:
       games:
-        description: "Total games (split evenly across 8 runners)"
-        default: "1000"
+        description: "Total games (split evenly across 20 runners)"
+        default: "10000"
 
 jobs:
   play:
@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     steps:
       - uses: actions/checkout@v4
 
@@ -28,8 +28,12 @@ jobs:
         run: ./setup.sh
 
       - name: Play games
-        # Each shard plays an even number of games (openings come in color-swapped pairs).
-        run: ./run_tournament.sh $(( (${{ inputs.games }} + 15) / 16 * 2 )) $(( 1000 + ${{ matrix.shard }} ))
+        # Each shard plays an even number of games (openings come in color-swapped pairs),
+        # 2 at a time so the engines never compete for a CPU core. The seed differs per
+        # run and shard so no two shards replay the same openings.
+        env:
+          CONC: 2
+        run: ./run_tournament.sh $(( (${{ inputs.games }} + 39) / 40 * 2 )) $(( ${{ github.run_number }} * 1000 + ${{ matrix.shard }} ))
 
       - name: Save results
         if: always()

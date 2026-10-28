@@ -1,6 +1,6 @@
 # Stockfish ttPv pruning test
 
-A 1000-game match at 15+0 between stock Stockfish (commit `ff3a6c5`, 2026-10-25) and the same
+A match at 15+0 (10,000 games by default on GitHub, 1000 locally) between stock Stockfish (commit `ff3a6c5`, 2026-10-25) and the same
 version with `ttpv.patch` applied.
 
 ## The edit
@@ -13,7 +13,7 @@ unchanged and the only behavior change is less shallow pruning at ttPv nodes.
 
 ## Running it
 
-On GitHub: Actions → Tournament → Run workflow. It splits the games across 8 runners and
+On GitHub: Actions → Tournament → Run workflow. It splits the games across 20 runners and
 shows the combined score on the run's summary page.
 
 Locally:
