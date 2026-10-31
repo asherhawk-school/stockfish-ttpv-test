@@ -1,6 +1,6 @@
 """Combine the PGN files from all shards and print the overall result as Markdown.
 
-Usage: python3 combine.py <folder with *.pgn files, searched recursively> [patch] [stockfish commit]
+Usage: python3 combine.py <folder with *.pgn files, searched recursively> [patch] [stockfish commit] [time control]
 """
 import math
 import pathlib
@@ -27,8 +27,8 @@ for pgn in pathlib.Path(sys.argv[1]).rglob("*.pgn"):
                 edited_time_losses += 1
 
 n = wins + losses + draws
-patch, commit = (sys.argv[2:] + ["", ""])[:2]
-print(f"## {pathlib.Path(patch).stem or 'Edited'} vs stock Stockfish{' ' + commit[:8] if commit else ''}, 15+0\n")
+patch, commit, tc = (sys.argv[2:] + ["", "", ""])[:3]
+print(f"## {pathlib.Path(patch).stem or 'Edited'} vs stock Stockfish{' ' + commit[:8] if commit else ''}, {tc or '15+0'}\n")
 if n == 0:
     print("No finished games found.")
     sys.exit()

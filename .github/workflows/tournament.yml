@@ -1,6 +1,6 @@
 name: Tournament
 
-# Plays edited vs stock Stockfish at 15+0, split across 20 GitHub runners that
+# Plays edited vs stock Stockfish, split across 20 GitHub runners that
 # play in parallel, then combines the games into one result on the run's page.
 on:
   workflow_dispatch:
@@ -14,6 +14,12 @@ on:
       sf_commit:
         description: "Stockfish commit to apply it to (empty = latest official master)"
         default: ""
+      tc:
+        description: "Time control (fishtest uses 10+0.1 for STC and 60+0.6 for LTC)"
+        default: "15+0"
+      hash:
+        description: "Hash in MB per engine (fishtest uses 16 for STC and 64 for LTC)"
+        default: "16"
 
 jobs:
   prepare:
@@ -43,6 +49,8 @@ jobs:
     env:
       SF_COMMIT: ${{ needs.prepare.outputs.commit }}
       PATCH: ${{ inputs.patch }}
+      TC: ${{ inputs.tc }}
+      HASH: ${{ inputs.hash }}
     steps:
       - uses: actions/checkout@v4
 
@@ -84,4 +92,5 @@ jobs:
         env:
           PATCH: ${{ inputs.patch }}
           SF_COMMIT: ${{ needs.prepare.outputs.commit }}
-        run: python3 combine.py shards "$PATCH" "$SF_COMMIT" | tee -a "$GITHUB_STEP_SUMMARY"
+          TC: ${{ inputs.tc }}
+        run: python3 combine.py shards "$PATCH" "$SF_COMMIT" "$TC" | tee -a "$GITHUB_STEP_SUMMARY"

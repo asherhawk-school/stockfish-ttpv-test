@@ -1,0 +1,13 @@
+diff --git a/src/search.cpp b/src/search.cpp
+index 623298ca..72a5ace1 100644
+--- a/src/search.cpp
++++ b/src/search.cpp
+@@ -2069,7 +2069,7 @@ void update_continuation_histories(Stack* ss, Piece pc, Square to, int bonus) {
+                 positiveCount++;
+ 
+             int multiplier = CMHCMultipliers[positiveCount];
+-            historyEntry << bonus * weight * multiplier / 65536 + 73 * (i < 2);
++            historyEntry << bonus * weight * multiplier / 65536;
+         }
+     }
+ }

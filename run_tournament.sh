@@ -1,5 +1,5 @@
 #!/bin/bash
-# Match at 15+0: edited Stockfish (the patch setup.sh applied) vs stock.
+# Match: edited Stockfish (the patch setup.sh applied) vs stock, at $TC (default 15+0).
 # Each opening is played twice with colors swapped. Run setup.sh first.
 # Usage: ./run_tournament.sh [games] [seed]   (defaults: 1000 games, random seed)
 set -euo pipefail
@@ -7,6 +7,8 @@ cd "$(dirname "$0")"
 WORK="$PWD/work"
 GAMES=${1:-1000}
 SEED=${2:-$RANDOM}
+TC=${TC:-15+0}
+HASH=${HASH:-16}
 CORES=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 CONC=${CONC:-$(( CORES > 1 ? CORES - 1 : 1 ))}   # default leaves one core free to avoid time losses
 [ "$CONC" -ge "$CORES" ] && [ "$CORES" -gt 1 ] && CONC=$(( CORES - 1 ))
@@ -14,12 +16,12 @@ mkdir -p results
 
 if command -v cutechess-cli >/dev/null; then CC=cutechess-cli; else CC="$WORK/cutechess/build/cutechess-cli"; fi
 
-echo "Playing $GAMES games, $CONC at a time, opening seed $SEED"
+echo "Playing $GAMES games at $TC (Hash $HASH), $CONC at a time, opening seed $SEED"
 if [ -x "$CC" ] || command -v "$CC" >/dev/null; then
     "$CC" \
       -engine cmd="$WORK/edited/src/stockfish" name=edited \
       -engine cmd="$WORK/base/src/stockfish" name=stock \
-      -each proto=uci tc=15+0 option.Hash=16 option.Threads=1 timemargin=100 \
+      -each proto=uci tc="$TC" option.Hash="$HASH" option.Threads=1 timemargin=100 \
       -openings file="$WORK/UHO_Lichess_4852_v1.epd" format=epd order=random \
       -rounds $(( GAMES / 2 )) -games 2 -repeat -concurrency "$CONC" -recover -srand "$SEED" \
       -ratinginterval 10 -pgnout results/tournament.pgn \
@@ -28,7 +30,7 @@ else
     "$WORK/fastchess/fastchess" \
       -engine cmd="$WORK/edited/src/stockfish" name=edited \
       -engine cmd="$WORK/base/src/stockfish" name=stock \
-      -each tc=15+0 option.Hash=16 option.Threads=1 proto=uci timemargin=100 \
+      -each tc="$TC" option.Hash="$HASH" option.Threads=1 proto=uci timemargin=100 \
       -openings file="$WORK/UHO_Lichess_4852_v1.epd" format=epd order=random \
       -rounds $(( GAMES / 2 )) -games 2 -repeat -concurrency "$CONC" -recover -srand "$SEED" \
       -ratinginterval 10 -pgnout file=results/tournament.pgn \
