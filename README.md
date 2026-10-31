@@ -8,7 +8,7 @@ Matches (15+0 by default, any time control on GitHub) between stock Stockfish an
 | Patch | What it does | Result |
 |---|---|---|
 | `ttpv.patch` | Undoes commit `dabffbce` ("Make pruning at ttpv nodes more aggressive"): removes `if (ss->ttPv) r += 929;` before shallow-depth pruning and lowers the matching LMR constant from 3023 to 2094, so only the pruning changes. That commit was -4.98 ± 2.1 Elo at 10+0.1 but kept because it gained at very long time controls. | 11,008 games: +2.9 Elo (95% range -1.7 to +7.6) |
-| `conthist-offset.patch` | Removes the last constant offset (`+ 73 * (i < 2)`) from continuation history updates. Commit `525a5749` already replaced six per-ply offsets with this one and measured about 0 Elo at both time controls. | pending |
+| `conthist-offset.patch` | Removes the last constant offset (`+ 73 * (i < 2)`) from continuation history updates. Commit `525a5749` already replaced six per-ply offsets with this one and measured about 0 Elo at both time controls. | 2,000 games at 10+0.1: +5.2 Elo (95% range -5.5 to +15.9) |
 
 ## Running it
 
