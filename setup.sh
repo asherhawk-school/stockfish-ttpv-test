@@ -6,7 +6,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 ROOT="$PWD"
 WORK="$ROOT/work"
-SF_COMMIT=ff3a6c508ed731f0dcf253f4ddf646df19a62f84   # Stockfish master, 2026-10-25
+SF_COMMIT=${SF_COMMIT:-ff3a6c508ed731f0dcf253f4ddf646df19a62f84}   # default: Stockfish master, 2026-10-25
+PATCH=$(cd "$ROOT" && realpath "${PATCH:-patches/ttpv.patch}")
 JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 mkdir -p "$WORK"
 
@@ -14,21 +15,25 @@ as_root() { if [ "$(id -u)" = 0 ]; then "$@"; elif sudo -n true 2>/dev/null; the
 
 build_stockfish() {  # $1 = folder name, $2 = optional patch
     local dir="$WORK/$1"
+    local stamp="$SF_COMMIT ${2:+$(shasum "$2" | cut -c1-40)}"
+    # Start over if the folder was built from a different commit or patch.
+    if [ -d "$dir" ] && [ "$(cat "$dir/.stamp" 2>/dev/null)" != "$stamp" ]; then rm -rf "$dir"; fi
     if [ ! -d "$dir" ]; then
         git init -q "$dir"
         git -C "$dir" remote add origin https://github.com/official-stockfish/Stockfish.git
         git -C "$dir" fetch -q --depth 1 origin "$SF_COMMIT"
         git -C "$dir" checkout -q FETCH_HEAD
         if [ -n "${2:-}" ]; then git -C "$dir" apply "$2"; fi
+        echo "$stamp" > "$dir/.stamp"
     fi
     (cd "$dir/src" && { make -j"$JOBS" profile-build ARCH=native >"$WORK/build-$1.log" 2>&1 \
         || make -j"$JOBS" build ARCH=native >>"$WORK/build-$1.log" 2>&1; })
     echo "$1: $("$dir/src/stockfish" bench 2>&1 | grep 'Nodes searched')"
 }
 
-echo "== Building Stockfish ($JOBS cores)"
+echo "== Building Stockfish ${SF_COMMIT:0:8} with and without ${PATCH#$ROOT/} ($JOBS cores)"
 build_stockfish base
-build_stockfish ttpv "$ROOT/ttpv.patch"
+build_stockfish edited "$PATCH"
 
 echo "== Downloading opening book"
 if [ ! -f "$WORK/UHO_Lichess_4852_v1.epd" ]; then

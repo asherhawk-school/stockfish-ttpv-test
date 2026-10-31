@@ -8,16 +8,41 @@ on:
       games:
         description: "Total games (split evenly across 20 runners)"
         default: "10000"
+      patch:
+        description: "Patch to test, from the patches folder"
+        default: "patches/ttpv.patch"
+      sf_commit:
+        description: "Stockfish commit to apply it to (empty = latest official master)"
+        default: ""
 
 jobs:
+  prepare:
+    name: Pick Stockfish commit
+    runs-on: ubuntu-latest
+    outputs:
+      commit: ${{ steps.pick.outputs.commit }}
+    steps:
+      - id: pick
+        env:
+          SF_COMMIT: ${{ inputs.sf_commit }}
+        run: |
+          # Resolve "latest master" once so every shard builds the same commit.
+          [ -n "$SF_COMMIT" ] || SF_COMMIT=$(git ls-remote https://github.com/official-stockfish/Stockfish.git refs/heads/master | cut -f1)
+          echo "commit=$SF_COMMIT" >> "$GITHUB_OUTPUT"
+          echo "Stockfish $SF_COMMIT"
+
   play:
     name: Games (shard ${{ matrix.shard }})
+    needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    env:
+      SF_COMMIT: ${{ needs.prepare.outputs.commit }}
+      PATCH: ${{ inputs.patch }}
     steps:
       - uses: actions/checkout@v4
 
@@ -44,7 +69,7 @@ jobs:
 
   combine:
     name: Combined result
-    needs: play
+    needs: [prepare, play]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -56,4 +81,7 @@ jobs:
           path: shards
 
       - name: Combine shards
-        run: python3 combine.py shards | tee -a "$GITHUB_STEP_SUMMARY"
+        env:
+          PATCH: ${{ inputs.patch }}
+          SF_COMMIT: ${{ needs.prepare.outputs.commit }}
+        run: python3 combine.py shards "$PATCH" "$SF_COMMIT" | tee -a "$GITHUB_STEP_SUMMARY"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Match at 15+0: edited Stockfish (ttpv.patch) vs stock.
+# Match at 15+0: edited Stockfish (the patch setup.sh applied) vs stock.
 # Each opening is played twice with colors swapped. Run setup.sh first.
 # Usage: ./run_tournament.sh [games] [seed]   (defaults: 1000 games, random seed)
 set -euo pipefail
@@ -17,7 +17,7 @@ if command -v cutechess-cli >/dev/null; then CC=cutechess-cli; else CC="$WORK/cu
 echo "Playing $GAMES games, $CONC at a time, opening seed $SEED"
 if [ -x "$CC" ] || command -v "$CC" >/dev/null; then
     "$CC" \
-      -engine cmd="$WORK/ttpv/src/stockfish" name=edited \
+      -engine cmd="$WORK/edited/src/stockfish" name=edited \
       -engine cmd="$WORK/base/src/stockfish" name=stock \
       -each proto=uci tc=15+0 option.Hash=16 option.Threads=1 timemargin=100 \
       -openings file="$WORK/UHO_Lichess_4852_v1.epd" format=epd order=random \
@@ -26,7 +26,7 @@ if [ -x "$CC" ] || command -v "$CC" >/dev/null; then
       2>&1 | tee results/tournament.log | { grep --line-buffered -E "Score of|Elo difference|on time" || true; }
 else
     "$WORK/fastchess/fastchess" \
-      -engine cmd="$WORK/ttpv/src/stockfish" name=edited \
+      -engine cmd="$WORK/edited/src/stockfish" name=edited \
       -engine cmd="$WORK/base/src/stockfish" name=stock \
       -each tc=15+0 option.Hash=16 option.Threads=1 proto=uci timemargin=100 \
       -openings file="$WORK/UHO_Lichess_4852_v1.epd" format=epd order=random \
