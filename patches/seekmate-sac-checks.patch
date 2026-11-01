@@ -1,0 +1,18 @@
+diff --git a/src/search.cpp b/src/search.cpp
+index 623298ca..2e630559 100644
+--- a/src/search.cpp
++++ b/src/search.cpp
+@@ -1220,10 +1220,11 @@ moves_loop:  // When in check, search starts here
+                 }
+ 
+                 // SEE based pruning for captures and checks.
+-                // Avoid pruning sacrifices of our last piece for stalemate.
++                // Avoid pruning sacrifices of our last piece for stalemate,
++                // and checking sacrifices when seeking a mate.
+                 int margin = 177 * depth + captHist * 34 / 1024;
+                 if ((alpha >= VALUE_DRAW || pos.non_pawn_material(us) != PieceValue[movedPiece])
+-                    && !pos.see_ge(move, -margin))
++                    && !(seekMate && givesCheck) && !pos.see_ge(move, -margin))
+                     continue;
+             }
+             else if (!ss->followPV || !PvNode)
