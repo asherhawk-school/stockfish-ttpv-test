@@ -55,7 +55,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Qt and CMake for cutechess
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq cmake qt6-base-dev qt6-svg-dev
+        # apt occasionally hangs on a runner; give up after a while and retry once
+        timeout-minutes: 15
+        run: |
+          for i in 1 2; do
+            timeout 360 sudo apt-get update -qq && timeout 360 sudo apt-get install -y -qq cmake qt6-base-dev qt6-svg-dev && exit 0
+            sleep 10
+          done
+          exit 1
 
       - name: Build engines, download book, build cutechess
         run: ./setup.sh
